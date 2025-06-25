@@ -53,6 +53,8 @@ public class Environment {
     /** List of shots present in the environment. */
     private List<Shot> shots;
 
+    private double scale = 1.0;
+
     /**
      * Default constructor to create an empty environment.
      */
@@ -391,6 +393,14 @@ public class Environment {
                 shot.move(new ArrayList<>(List.of(shot.getDirection())));
             }
         }
+    }
+
+    public double getScale() {
+        return scale;
+    }
+
+    public void setScale(double scale) {
+        this.scale = scale;
     }
 
 }

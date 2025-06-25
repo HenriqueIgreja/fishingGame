@@ -40,17 +40,8 @@ public class JavaFxDrawer {
         this.gc.clearRect(0, 0, width, height);
     }
 
-    /**
-     * Renders an image at the specified position and dimensions.
-     *
-     * @param image  The image to be drawn.
-     * @param posX   The x-coordinate position.
-     * @param posY   The y-coordinate position.
-     * @param width  The width of the image.
-     * @param height The height of the image.
-     */
-    public void drawImage(Image image, int posX, int posY, int width, int height) {
-        this.gc.drawImage(image, posX, posY, width, height);
+    public void drawImage(Image image, int posX, int posY, int width, int height, double scale) {
+        this.gc.drawImage(image, posX * scale, posY * scale, width * scale, height * scale);
     }
 
     /**
@@ -62,35 +53,44 @@ public class JavaFxDrawer {
      * @param posX       The x-coordinate position.
      * @param posY       The y-coordinate position.
      * @param color      The color of the life bar.
+     * @param scale      The scale factor for drawing.
      */
-    public void drawLifeBar(int health, int fullHealth, int width, int posX, int posY, Color color) {
+    public void drawLifeBar(int health, int fullHealth, int width, int posX, int posY, Color color, double scale) {
         int borderThickness = 2;
         int barHeight = 5;
         int lifeSpan = Math.round((float) ((health * 100 / fullHealth) * width) / 100);
         int barY = 15;
 
         this.gc.setFill(Color.BLACK);
-        this.gc.fillRect(posX, posY - barY, width, barHeight + (borderThickness * 2));
+        this.gc.fillRect(
+            posX * scale,
+            (posY - barY) * scale,
+            width * scale,
+            (barHeight + (borderThickness * 2)) * scale
+        );
 
         this.gc.setFill(color);
-        this.gc.fillRect(posX + borderThickness,
-                posY - (barY - borderThickness),
-                (lifeSpan - (borderThickness * 2)),
-                barHeight);
+        this.gc.fillRect(
+            (posX + borderThickness) * scale,
+            (posY - (barY - borderThickness)) * scale,
+            (lifeSpan - (borderThickness * 2)) * scale,
+            barHeight * scale
+        );
     }
 
     /**
      * Displays a status panel showing the protagonist's coordinates.
      *
-     * @param posX The x-coordinate of the protagonist.
-     * @param posY The y-coordinate of the protagonist.
+     * @param posX  The x-coordinate of the protagonist.
+     * @param posY  The y-coordinate of the protagonist.
+     * @param scale The scale factor for drawing.
      */
-    public void drawStatusPanel(int posX, int posY) {
-        Font theFont = Font.font("Verdana", FontWeight.BOLD, 14);
+    public void drawStatusPanel(int posX, int posY, double scale) {
+        Font theFont = Font.font("Verdana", FontWeight.BOLD, 14 * scale);
         this.gc.setFont(theFont);
         this.gc.setFill(Color.BLACK);
-        this.gc.fillText("X: " + posX, posX + 10, posY - 40);
-        this.gc.fillText("Y: " + posY, posX + 10, posY - 25);
+        this.gc.fillText("X: " + posX, (posX + 10) * scale, (posY - 40) * scale);
+        this.gc.fillText("Y: " + posY, (posX + 10) * scale, (posY - 25) * scale);
     }
 
     /**
@@ -101,15 +101,19 @@ public class JavaFxDrawer {
      * @param imageHeight The height of the pause image.
      * @param width       The total width of the environment.
      * @param height      The total height of the environment.
+     * @param scale       The scale factor for drawing.
      */
-    public void drawScreen(Image image, int imageWidth, int imageHeight, int width, int height) {
+    public void drawScreen(Image image, int imageWidth, int imageHeight, int width, int height, double scale) {
         if (image != null && this.gc != null) {
-            double centerX = (width - imageWidth) / 2;
-            double centerY = (height - imageHeight) / 2;
-            this.gc.drawImage(image, centerX, centerY);
+            double canvasWidth = gc.getCanvas().getWidth();
+            double canvasHeight = gc.getCanvas().getHeight();
+            double centerX = (canvasWidth - (imageWidth * scale)) / 2;
+            double centerY = (canvasHeight - (imageHeight * scale)) / 2;
+            this.gc.drawImage(image, centerX, centerY, imageWidth * scale, imageHeight * scale);
         }
     }
 
+    // ...existing code...
     /**
      * Draws damage numbers that appear when agents take damage.
      * The numbers float upward and fade out over time.
@@ -121,39 +125,24 @@ public class JavaFxDrawer {
      * @param message     The message to be printed.
      * @param posX        The x-coordinate of the protagonist.
      * @param posY        The y-coordinate of the protagonist.
+     * @param scale       The scale factor for drawing.
      */
     public void drawMessages(int fontSize, double opacity, Color borderColor, Color fillColor, String message,
-            double posX, double posY) {
-        Font damageFont = Font.font("Verdana", FontWeight.BOLD, fontSize);
+            double posX, double posY, double scale) {
+        Font damageFont = Font.font("Verdana", FontWeight.BOLD, fontSize * scale);
         gc.setFont(damageFont);
 
         gc.setGlobalAlpha(opacity);
 
         gc.setFill(borderColor);
-        double offset = 1.5;
-        gc.fillText(
-                String.valueOf(message),
-                posX - offset,
-                posY);
-        gc.fillText(
-                String.valueOf(message),
-                posX + offset,
-                posY);
-        gc.fillText(
-                String.valueOf(message),
-                posX,
-                posY - offset);
-        gc.fillText(
-                String.valueOf(message),
-                posX,
-                posY + offset);
+        double offset = 1.5 * scale;
+        gc.fillText(String.valueOf(message), posX * scale - offset, posY * scale);
+        gc.fillText(String.valueOf(message), posX * scale + offset, posY * scale);
+        gc.fillText(String.valueOf(message), posX * scale, posY * scale - offset);
+        gc.fillText(String.valueOf(message), posX * scale, posY * scale + offset);
 
-        // gc.setFill(Color.rgb(255, 30, 30));
         gc.setFill(fillColor);
-        gc.fillText(
-                String.valueOf(message),
-                posX,
-                posY);
+        gc.fillText(String.valueOf(message), posX * scale, posY * scale);
 
         gc.setGlobalAlpha(1.0);
     }

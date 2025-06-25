@@ -51,7 +51,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
                 this.environment.getPosX(),
                 this.environment.getPosY(),
                 this.environment.getWidth(),
-                this.environment.getHeight());
+                this.environment.getHeight(),
+                this.environment.getScale());
     }
 
     /**
@@ -65,29 +66,35 @@ public class JavaFxMediator implements EnvironmentDrawer {
                     agent.getPosX(),
                     agent.getPosY(),
                     agent.getWidth(),
-                    agent.getHeight());
+                    agent.getHeight(),
+                    this.environment.getScale());
             drawer.drawLifeBar(agent.getHealth(),
                     agent.getFullHealth(),
                     agent.getWidth(),
                     agent.getPosX(),
                     agent.getPosY(),
-                    Color.DARKRED);
+                    Color.DARKRED,
+                    this.environment.getScale());
         }
         drawer.drawImage(this.environment.getProtagonist().getImage(),
                 this.environment.getProtagonist().getPosX(),
                 this.environment.getProtagonist().getPosY(),
                 this.environment.getProtagonist().getWidth(),
-                this.environment.getProtagonist().getHeight());
+                this.environment.getProtagonist().getHeight(),
+                this.environment.getScale());
         drawer.drawLifeBar(this.environment.getProtagonist().getHealth(),
                 this.environment.getProtagonist().getFullHealth(),
                 this.environment.getProtagonist().getWidth(),
                 this.environment.getProtagonist().getPosX(),
                 this.environment.getProtagonist().getPosY(),
-                Color.GREEN);
+                Color.GREEN,
+                this.environment.getScale());
         drawer.drawStatusPanel(this.environment.getProtagonist().getPosX(),
-                this.environment.getProtagonist().getPosY());
+                this.environment.getProtagonist().getPosY(),
+                this.environment.getScale());
         drawer.drawStatusPanel(this.environment.getProtagonist().getPosX(),
-                this.environment.getProtagonist().getPosY());
+                this.environment.getProtagonist().getPosY(),
+                this.environment.getScale());
     }
 
     /**
@@ -101,7 +108,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
                 this.environment.getProtagonist().getWidth(),
                 this.environment.getProtagonist().getPosX(),
                 this.environment.getProtagonist().getPosY(),
-                Color.GREEN);
+                Color.GREEN,
+                this.environment.getScale());
     }
 
     /**
@@ -110,7 +118,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
     @Override
     public void drawStatusPanel() {
         drawer.drawStatusPanel(this.environment.getProtagonist().getPosX(),
-                this.environment.getProtagonist().getPosY());
+                this.environment.getProtagonist().getPosY(),
+                this.environment.getScale());
     }
 
     /**
@@ -123,7 +132,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
                 (int) this.environment.getPauseImage().getWidth(),
                 (int) this.environment.getPauseImage().getHeight(),
                 this.environment.getWidth(),
-                this.environment.getHeight());
+                this.environment.getHeight(),
+                this.environment.getScale());
     }
 
     /**
@@ -136,7 +146,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
                 (int) this.environment.getPauseImage().getWidth(),
                 (int) this.environment.getPauseImage().getHeight(),
                 this.environment.getWidth(),
-                this.environment.getHeight());
+                this.environment.getHeight(),
+                this.environment.getScale());
     }
 
     /**
@@ -154,7 +165,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
                     Color.WHEAT,
                     String.valueOf(message.getMessage()),
                     message.getPosX(),
-                    message.getPosY());
+                    message.getPosY(),
+                    this.environment.getScale());
         }
     }
 
@@ -167,8 +179,8 @@ public class JavaFxMediator implements EnvironmentDrawer {
                     shot.getPosX(),
                     shot.getPosY(),
                     shot.getWidth(),
-                    shot.getHeight());
+                    shot.getHeight(),
+                    this.environment.getScale());
         }
     }
-
 }

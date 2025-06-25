@@ -12,12 +12,12 @@ import chon.group.game.drawer.JavaFxMediator;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 /**
  * The {@code Engine} class represents the main entry point of the application
@@ -39,7 +39,9 @@ public class Engine extends Application {
 
     /* If the game is paused or not. */
     private boolean isPaused = false;
-
+    final static int WIDTH = 320;
+    final static int HEIGHT = 280;
+    final static int ASPECT_RATIO = WIDTH / HEIGHT;
     /**
      * Main entry point of the application.
      *
@@ -64,13 +66,13 @@ public class Engine extends Application {
     public void start(Stage theStage) {
         try {
             /* Initialize the game environment and agents */
-            Environment environment = new Environment(0, 0, 1280, 780, "/images/environment/castle.png");
-            Agent chonBota = new Agent(400, 390, 90, 65, 3, 1000, "/images/agents/chonBota.png", false);
-            Weapon cannon = new Cannon(400, 390, 0, 0, 3, 0, "", false);
+            Environment environment = new Environment(0, 0, WIDTH, HEIGHT, "/images/environment/castle.png");
+            Agent chonBota = new Agent(0, 0, 30, 22, 3, 1000, "/images/agents/chonBota.png", false);
+            Weapon cannon = new Cannon(320, 390, 0, 0, 3, 0, "", false);
             Weapon fireball = new Fireball(400, 390, 0, 0, 3, 0, "", false);
             chonBota.setWeapon(fireball);
 
-            Agent chonBot = new Agent(920, 440, 90, 65, 1, 500, "/images/agents/chonBot.png", true);
+            Agent chonBot = new Agent(290, 138, 30, 22, 1, 500, "/images/agents/chonBot.png", true);
             environment.setProtagonist(chonBota);
             environment.getAgents().add(chonBot);
             environment.setPauseImage("/images/environment/pause.png");
@@ -79,6 +81,7 @@ public class Engine extends Application {
             /* Set up the graphical canvas */
             Canvas canvas = new Canvas(environment.getWidth(), environment.getHeight());
             GraphicsContext gc = canvas.getGraphicsContext2D();
+            gc.setImageSmoothing(false);
             EnvironmentDrawer mediator = new JavaFxMediator(environment, gc);
 
             /* Set up the scene and stage */
@@ -89,6 +92,28 @@ public class Engine extends Application {
 
             root.getChildren().add(canvas);
             theStage.show();
+
+            theStage.widthProperty().addListener((obs, oldVal, newVal) -> {
+                double newWidth = newVal.doubleValue();
+                double newHeight = newWidth / ASPECT_RATIO;
+                // Prevent recursive calls
+                if (Math.abs(theStage.getHeight() - newHeight) > 1) {
+                    theStage.setHeight(newHeight);
+                }
+                canvas.setWidth(newWidth);
+                environment.setScale(newWidth / WIDTH);
+            });
+
+            theStage.heightProperty().addListener((obs, oldVal, newVal) -> {
+                double newHeight = newVal.doubleValue();
+                double newWidth = newHeight * ASPECT_RATIO;
+                // Prevent recursive calls
+                if (Math.abs(theStage.getWidth() - newWidth) > 1) {
+                    theStage.setWidth(newWidth);
+                }
+                canvas.setHeight(newHeight);
+                environment.setScale(newHeight / HEIGHT);
+            });
 
             /* Handle keyboard input */
             ArrayList<String> input = new ArrayList<String>();
