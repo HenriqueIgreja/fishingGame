@@ -91,29 +91,9 @@ public class Engine extends Application {
             theStage.setScene(scene);
 
             root.getChildren().add(canvas);
+            canvas.widthProperty().bind(root.widthProperty());
+            canvas.heightProperty().bind(root.heightProperty());
             theStage.show();
-
-            theStage.widthProperty().addListener((obs, oldVal, newVal) -> {
-                double newWidth = newVal.doubleValue();
-                double newHeight = newWidth / ASPECT_RATIO;
-                // Prevent recursive calls
-                if (Math.abs(theStage.getHeight() - newHeight) > 1) {
-                    theStage.setHeight(newHeight);
-                }
-                canvas.setWidth(newWidth);
-                environment.setScale(newWidth / WIDTH);
-            });
-
-            theStage.heightProperty().addListener((obs, oldVal, newVal) -> {
-                double newHeight = newVal.doubleValue();
-                double newWidth = newHeight * ASPECT_RATIO;
-                // Prevent recursive calls
-                if (Math.abs(theStage.getWidth() - newWidth) > 1) {
-                    theStage.setWidth(newWidth);
-                }
-                canvas.setHeight(newHeight);
-                environment.setScale(newHeight / HEIGHT);
-            });
 
             /* Handle keyboard input */
             ArrayList<String> input = new ArrayList<String>();
@@ -152,6 +132,14 @@ public class Engine extends Application {
                  */
                 @Override
                 public void handle(long arg0) {
+                    double canvasWidth = canvas.getWidth();
+                    double canvasHeight = canvas.getHeight();
+                    double scaleX = canvasWidth / WIDTH;
+                    double scaleY = canvasHeight / HEIGHT;
+
+                    gc.save(); // Save current transform
+                    gc.clearRect(0, 0, canvasWidth, canvasHeight);
+                    gc.scale(scaleX, scaleY);
                     mediator.clearEnvironment();
                     /* Branching the Game Loop */
                     /* If the agent died in the last loop */
@@ -209,6 +197,7 @@ public class Engine extends Application {
                             mediator.drawMessages();
                         }
                     }
+                    gc.restore();
                 }
             }.start();
             theStage.show();
