@@ -22,6 +22,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 /**
  * The {@code Engine} class represents the main entry point of the application
@@ -45,15 +48,19 @@ public class Engine extends Application {
     private boolean isPaused = false;
     final static int WIDTH = 320;
     final static int HEIGHT = 280;
-    final static int ASPECT_RATIO = WIDTH / HEIGHT;
+    final static double ASPECT_RATIO = (double) WIDTH / HEIGHT;
     private boolean isSlowMoving = false;
     private boolean isSlowMovingUp = false;
     private boolean isWaitingForFish = false;
     private String inputKey = "";
-    private String[] keysArray = {"UP", "DOWN", "RIGHT", "LEFT"};
+    private String[] keysArray = {"A", "E", "M", "V", "UP", "DOWN", "RIGHT", "LEFT"};
     private boolean isWaitingForInputKey = false;
     private PauseTransition inputKeyTimer;
     private int score = 0;
+    private AudioClip pickUp;
+    private AudioClip powerUp;
+    private AudioClip synth;
+    private MediaPlayer musicPlayer;
 
     /**
      * Main entry point of the application.
@@ -97,6 +104,14 @@ public class Engine extends Application {
             environment.setCatchKeyImage("/images/Agents/UpKey.png");
             environment.setGameOverImage("/images/environment/gameover.png");
             Font customFont = Font.loadFont(getClass().getResourceAsStream("/fonts/Daydream.ttf"), 14);
+            synth = new AudioClip(getClass().getResource("/sounds/synth.mp3").toExternalForm());
+            powerUp = new AudioClip(getClass().getResource("/sounds/powerUp.mp3").toExternalForm());
+            pickUp = new AudioClip(getClass().getResource("/sounds/pickupCoin.mp3").toExternalForm());
+            Media music = new Media(getClass().getResource("/sounds/music.mp3").toExternalForm());
+            musicPlayer = new MediaPlayer(music);
+            musicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Loop forever
+            musicPlayer.setVolume(0.1); // Optional: set volume (0.0 to 1.0)
+            musicPlayer.play();
 
             /* Set up the graphical canvas */
             Canvas canvas = new Canvas(environment.getWidth(), environment.getHeight());
@@ -159,6 +174,7 @@ public class Engine extends Application {
 
                     if (isWaitingForInputKey) {
                         if (code.equals(inputKey)) {
+                            if (pickUp != null) pickUp.play();
                             isWaitingForInputKey = false;
                             if (inputKeyTimer != null) inputKeyTimer.stop();
                             isSlowMovingUp = true;
@@ -268,7 +284,8 @@ public class Engine extends Application {
                                 /* Fishing Rod goes to the sea */
                                 if (input.contains("SPACE")) {
                                     input.remove("SPACE");
-                                    if (!isSlowMoving && !isSlowMovingUp) {
+                                    if (!isSlowMoving && !isSlowMovingUp && !isWaitingForInputKey && !isWaitingForFish) {
+                                        powerUp.play();
                                         isSlowMoving = true;
                                         environment.getFish().setPosY(-52);
                                         environment.getFish().setPosX(-27);
@@ -347,7 +364,7 @@ public class Engine extends Application {
             isWaitingForFish = false;
 
             // 🎣 Determine fishing outcome
-            boolean caughtFish = Math.random() < 0.5; // 50% chance
+            boolean caughtFish = Math.random() < 0.85; // 50% chance
 
             if (caughtFish) {
                 System.out.println("You caught a fish!");
@@ -355,6 +372,7 @@ public class Engine extends Application {
                 // You can trigger animation, sound, or add to inventory here
             } else {
                 isSlowMovingUp = true;
+                synth.play();
                 System.out.println("No fish this time.");
             }
         });
