@@ -54,12 +54,22 @@ public class JavaFxMediator implements EnvironmentDrawer {
     }
 
     @Override
+    public void drawFish() {
+        drawer.drawImage (this.environment.getFish().getImage(),
+            this.environment.getFish().getPosX(),
+            this.environment.getFish().getPosY(),
+            this.environment.getFish().getWidth(),
+            this.environment.getFish().getHeight(),
+            this.environment.getScale());
+    }
+
+    @Override
     public void drawInputKey() {
         drawer.drawImage(this.environment.getCatchKeyImage(),
-                this.environment.getPosX(),
-                this.environment.getPosY(),
-                this.environment.getWidth(),
-                this.environment.getHeight(),
+                this.environment.getPosX() + 142,
+                this.environment.getPosY() + 80,
+                36,
+                38,
                 this.environment.getScale());
     }
 

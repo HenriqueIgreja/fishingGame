@@ -25,6 +25,7 @@ public interface EnvironmentDrawer {
 
     void drawSea();
     void drawInputKey();
+    void drawFish();
     /**
      * Draws the life bar for agents or players.
      */

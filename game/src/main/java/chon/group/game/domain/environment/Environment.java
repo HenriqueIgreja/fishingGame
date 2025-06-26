@@ -52,6 +52,7 @@ public class Environment {
 
     /** List of agents present in the environment. */
     private List<Agent> agents;
+    private Agent fish;
 
     /** List of messages to display. */
     private List<Message> messages;
@@ -421,7 +422,15 @@ public class Environment {
         return catchKeyImage;
     }
 
-    public void setCatchKeyImage(Image catchKeyImage) {
-        this.catchKeyImage = catchKeyImage;
+    public void setCatchKeyImage(String pathImage) {
+        this.catchKeyImage = new Image(getClass().getResource(pathImage).toExternalForm());
+    }
+
+    public Agent getFish() {
+        return fish;
+    }
+
+    public void setFish(Agent fish) {
+        this.fish = fish;
     }
 }

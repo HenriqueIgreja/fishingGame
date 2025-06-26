@@ -2,7 +2,7 @@ package chon.group;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Random;
 import chon.group.game.domain.agent.Agent;
 import chon.group.game.domain.agent.Cannon;
 import chon.group.game.domain.agent.Fireball;
@@ -19,6 +19,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -48,6 +49,11 @@ public class Engine extends Application {
     private boolean isSlowMoving = false;
     private boolean isSlowMovingUp = false;
     private boolean isWaitingForFish = false;
+    private String inputKey = "";
+    private String[] keysArray = {"UP", "DOWN", "RIGHT", "LEFT"};
+    private boolean isWaitingForInputKey = false;
+    private PauseTransition inputKeyTimer;
+    private int score = 0;
 
     /**
      * Main entry point of the application.
@@ -83,15 +89,20 @@ public class Engine extends Application {
             //environment.setProtagonist(chonBota);
             //environment.getAgents().add(chonBot);
             Agent fishingRod = new Agent(144, -138, 250, 32, 8, 500, "/images/agents/fishingRod.png", false);
+            Agent fish = new Agent(-27, -52, 52, 27, 1, 500, "/images/agents/fish.png", false);
+            environment.setFish(fish);
             environment.setProtagonist(fishingRod);
             environment.setPauseImage("/images/environment/pause.png");
             environment.setSeaImage("/images/environment/Sea.png");
+            environment.setCatchKeyImage("/images/Agents/UpKey.png");
             environment.setGameOverImage("/images/environment/gameover.png");
+            Font customFont = Font.loadFont(getClass().getResourceAsStream("/fonts/Daydream.ttf"), 14);
 
             /* Set up the graphical canvas */
             Canvas canvas = new Canvas(environment.getWidth(), environment.getHeight());
             GraphicsContext gc = canvas.getGraphicsContext2D();
             gc.setImageSmoothing(false);
+            gc.setFont(customFont);
             EnvironmentDrawer mediator = new JavaFxMediator(environment, gc);
 
             /* Set up the scene and stage */
@@ -144,6 +155,29 @@ public class Engine extends Application {
 
                     if (code.equals("P")) {
                         isPaused = !isPaused;
+                    }
+
+                    if (isWaitingForInputKey) {
+                        if (code.equals(inputKey)) {
+                            isWaitingForInputKey = false;
+                            if (inputKeyTimer != null) inputKeyTimer.stop();
+                            isSlowMovingUp = true;
+                            Agent rod = environment.getProtagonist();
+                            environment.getFish().setPosY(rod.getPosY() + rod.getHeight() - 21);
+                            environment.getFish().setPosX(rod.getPosX() - 5);
+                            score++;
+                            System.out.println("Success! Correct key pressed.");
+                            // Add success logic here
+                        } else {
+                            // Optionally, handle wrong key press (fail immediately or ignore)
+                            if (inputKeyTimer != null) inputKeyTimer.stop();
+                            isWaitingForInputKey = false;
+                            isSlowMovingUp = true;
+                            score = 0;
+                            System.out.println("Wrong key!");
+
+                        }
+                        return; // Don't process other input while waiting for key
                     }
 
                     if (!isPaused && !input.contains(code)) {
@@ -211,7 +245,7 @@ public class Engine extends Application {
                                         environment.getProtagonist().setPosY(0);
                                         isSlowMoving = false;
                                         environment.getProtagonist().setSpeed(8);
-                                        startFishingWait();
+                                        startFishingWait(environment);
                                     } else {
                                         environment.getProtagonist().setPosY(posY + delta);
                                     }
@@ -224,6 +258,7 @@ public class Engine extends Application {
                                         isSlowMovingUp = false;
                                         environment.getProtagonist().setSpeed(8);
                                     } else {
+                                        environment.getFish().setPosY(environment.getFish().getPosY() + delta);
                                         environment.getProtagonist().setPosY(posY + delta);
                                     }
                                 }
@@ -233,10 +268,18 @@ public class Engine extends Application {
                                 /* Fishing Rod goes to the sea */
                                 if (input.contains("SPACE")) {
                                     input.remove("SPACE");
-                                    if (!isSlowMoving && !isSlowMovingUp) isSlowMoving = true;
+                                    if (!isSlowMoving && !isSlowMovingUp) {
+                                        isSlowMoving = true;
+                                        environment.getFish().setPosY(-52);
+                                        environment.getFish().setPosX(-27);
+                                    }
                                 }
                                 /* Fishing Rod's Movements (LEFT AND RIGHT ONLY) */
-                                if (!isSlowMoving && !isWaitingForFish) environment.getProtagonist().move(input);
+                                if (!isSlowMoving && !isWaitingForFish) {
+                                    environment.getProtagonist().move(input);
+                                    environment.getFish().setPosY(-52);
+                                    environment.getFish().setPosX(-27);
+                                }
                                 environment.checkBorders();
                             }
                             /* Render the game environment and agents */
@@ -245,9 +288,26 @@ public class Engine extends Application {
                             environment.updateMessages();
                             mediator.drawBackground();
                             mediator.drawAgents();
+                            mediator.drawFish();
                             mediator.drawSea();
                             mediator.drawShots();
+                            if (isWaitingForInputKey) {
+                                mediator.drawInputKey();
+                            }
                             mediator.drawMessages();
+                            double x = 5;
+                            double y = 20;
+                            gc.setFont(customFont);
+                            gc.setFill(javafx.scene.paint.Color.BLACK);
+                            for (int dx = -2; dx <= 2; dx++) {
+                                for (int dy = -2; dy <= 2; dy++) {
+                                    if (dx != 0 || dy != 0) {
+                                        gc.fillText("Score: " + score, x + dx, y + dy);
+                                    }
+                                }
+                            }
+                            gc.setFill(javafx.scene.paint.Color.WHITE);
+                            gc.fillText("Score: " + score, x, y);
                         }
                     }
                     gc.restore();
@@ -277,7 +337,7 @@ public class Engine extends Application {
         canvas.setHeight(newHeight);
     }
 
-    private void startFishingWait() {
+    private void startFishingWait(Environment environment) {
         isWaitingForFish = true;
         
         int waitMillis = 2000 + (int)(Math.random() * 2000); // 2000–4000ms
@@ -291,6 +351,7 @@ public class Engine extends Application {
 
             if (caughtFish) {
                 System.out.println("You caught a fish!");
+                decideKey(environment);
                 // You can trigger animation, sound, or add to inventory here
             } else {
                 isSlowMovingUp = true;
@@ -299,5 +360,26 @@ public class Engine extends Application {
         });
 
         wait.play();
+    }
+
+    private void decideKey(Environment environment) {
+        Random random = new Random();
+        int randomIndex = random.nextInt(keysArray.length);
+        inputKey = keysArray[randomIndex];
+        environment.setCatchKeyImage("/images/Agents/" + inputKey + "Key.png");
+        isWaitingForInputKey = true; // <-- Add this line
+        if (inputKeyTimer != null) inputKeyTimer.stop();
+        double seconds = Math.max(0.85, 2.0 - score * 0.07);
+        inputKeyTimer = new PauseTransition(Duration.seconds(seconds));
+        inputKeyTimer.setOnFinished(event -> {
+            if (isWaitingForInputKey) {
+                isWaitingForInputKey = false;
+                System.out.println("Failed: Time ran out!");
+                score = 0;
+                isSlowMovingUp = true;
+                // You can add fail logic here
+            }
+        });
+        inputKeyTimer.play();
     }
 }

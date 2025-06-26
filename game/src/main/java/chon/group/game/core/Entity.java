@@ -250,12 +250,12 @@ public abstract class Entity {
      * Flips the Image horizontally.
      */
     public void flipImage() {
-        ImageView flippedImage = new ImageView(image);
+        /*ImageView flippedImage = new ImageView(image);
         flippedImage.setScaleX(-1);
         SnapshotParameters params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
         this.flipped = !this.flipped;
-        this.image = flippedImage.snapshot(params, null);
+        this.image = flippedImage.snapshot(params, null);*/
     }
 
     /**
