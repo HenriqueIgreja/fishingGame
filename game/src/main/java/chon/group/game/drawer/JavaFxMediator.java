@@ -7,6 +7,7 @@ import chon.group.game.domain.agent.Shot;
 import chon.group.game.domain.environment.Environment;
 import chon.group.game.messaging.Message;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 /**
@@ -40,6 +41,26 @@ public class JavaFxMediator implements EnvironmentDrawer {
     @Override
     public void clearEnvironment() {
         drawer.clearScreen(this.environment.getWidth(), this.environment.getHeight());
+    }
+
+    @Override
+    public void drawSea() {
+        drawer.drawImage (this.environment.getSeaImage(),
+            this.environment.getPosX(),
+            this.environment.getPosY() + 192,
+            this.environment.getWidth(),
+            this.environment.getHeight() - 192,
+            this.environment.getScale());
+    }
+
+    @Override
+    public void drawInputKey() {
+        drawer.drawImage(this.environment.getCatchKeyImage(),
+                this.environment.getPosX(),
+                this.environment.getPosY(),
+                this.environment.getWidth(),
+                this.environment.getHeight(),
+                this.environment.getScale());
     }
 
     /**

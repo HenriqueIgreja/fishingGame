@@ -273,11 +273,12 @@ public abstract class Entity {
             if (!flipped)
                 this.flipImage();
             setPosX(posX -= speed);
-        } else if (movements.contains("UP")) {
+        } 
+        /*else if (movements.contains("UP")) {
             setPosY(posY -= speed);
         } else if (movements.contains("DOWN")) {
             setPosY(posY += speed);
-        }
+        }*/
     }
 
     /**

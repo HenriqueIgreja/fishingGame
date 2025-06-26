@@ -1,6 +1,7 @@
 package chon.group;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import chon.group.game.domain.agent.Agent;
 import chon.group.game.domain.agent.Cannon;
@@ -10,6 +11,7 @@ import chon.group.game.domain.environment.Environment;
 import chon.group.game.drawer.EnvironmentDrawer;
 import chon.group.game.drawer.JavaFxMediator;
 import javafx.animation.AnimationTimer;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -18,6 +20,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
  * The {@code Engine} class represents the main entry point of the application
@@ -42,6 +45,10 @@ public class Engine extends Application {
     final static int WIDTH = 320;
     final static int HEIGHT = 280;
     final static int ASPECT_RATIO = WIDTH / HEIGHT;
+    private boolean isSlowMoving = false;
+    private boolean isSlowMovingUp = false;
+    private boolean isWaitingForFish = false;
+
     /**
      * Main entry point of the application.
      *
@@ -66,16 +73,19 @@ public class Engine extends Application {
     public void start(Stage theStage) {
         try {
             /* Initialize the game environment and agents */
-            Environment environment = new Environment(0, 0, WIDTH, HEIGHT, "/images/environment/castle.png");
-            Agent chonBota = new Agent(0, 0, 30, 22, 3, 1000, "/images/agents/chonBota.png", false);
+            Environment environment = new Environment(0, 0, WIDTH, HEIGHT, "/images/environment/Sky.png");
+            //Agent chonBota = new Agent(0, 0, 30, 22, 3, 1000, "/images/agents/chonBota.png", false);
             Weapon cannon = new Cannon(320, 390, 0, 0, 3, 0, "", false);
             Weapon fireball = new Fireball(400, 390, 0, 0, 3, 0, "", false);
-            chonBota.setWeapon(fireball);
+            //chonBota.setWeapon(fireball);
 
-            Agent chonBot = new Agent(290, 138, 30, 22, 1, 500, "/images/agents/chonBot.png", true);
-            environment.setProtagonist(chonBota);
-            environment.getAgents().add(chonBot);
+            //Agent chonBot = new Agent(290, 138, 30, 22, 1, 500, "/images/agents/chonBot.png", true);
+            //environment.setProtagonist(chonBota);
+            //environment.getAgents().add(chonBot);
+            Agent fishingRod = new Agent(144, -138, 250, 32, 8, 500, "/images/agents/fishingRod.png", false);
+            environment.setProtagonist(fishingRod);
             environment.setPauseImage("/images/environment/pause.png");
+            environment.setSeaImage("/images/environment/Sea.png");
             environment.setGameOverImage("/images/environment/gameover.png");
 
             /* Set up the graphical canvas */
@@ -91,9 +101,37 @@ public class Engine extends Application {
             theStage.setScene(scene);
 
             root.getChildren().add(canvas);
-            canvas.widthProperty().bind(root.widthProperty());
-            canvas.heightProperty().bind(root.heightProperty());
             theStage.show();
+            
+            adjustCanvasSize(canvas, scene.getWidth(), scene.getHeight());
+            double decorationWidth = theStage.getWidth() - scene.getWidth();
+            double decorationHeight = theStage.getHeight() - scene.getHeight();
+
+            /* Adjust the stage size to maintain the aspect ratio */
+            theStage.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+                double contentWidth = newWidth.doubleValue() - decorationWidth;
+                double newContentHeight = contentWidth / ASPECT_RATIO;
+                double newStageHeight = newContentHeight + decorationHeight;
+
+                if (Math.abs(theStage.getHeight() - newStageHeight) > 1) {
+                    theStage.setHeight(newStageHeight);
+                }
+            });
+            theStage.heightProperty().addListener((obs, oldHeight, newHeight) -> {
+                double contentHeight = newHeight.doubleValue() - decorationHeight;
+                double newContentWidth = contentHeight * ASPECT_RATIO;
+                double newStageWidth = newContentWidth + decorationWidth;
+
+                if (Math.abs(theStage.getWidth() - newStageWidth) > 1) {
+                    theStage.setWidth(newStageWidth);
+                }
+            });
+            scene.widthProperty().addListener((obs, oldVal, newVal) -> {
+                adjustCanvasSize(canvas, scene.getWidth(), scene.getHeight());
+            });
+            scene.heightProperty().addListener((obs, oldVal, newVal) -> {
+                adjustCanvasSize(canvas, scene.getWidth(), scene.getHeight());
+            });
 
             /* Handle keyboard input */
             ArrayList<String> input = new ArrayList<String>();
@@ -132,14 +170,15 @@ public class Engine extends Application {
                  */
                 @Override
                 public void handle(long arg0) {
+                    /* Helps scaling the screen. */
                     double canvasWidth = canvas.getWidth();
                     double canvasHeight = canvas.getHeight();
-                    double scaleX = canvasWidth / WIDTH;
-                    double scaleY = canvasHeight / HEIGHT;
-
-                    gc.save(); // Save current transform
+                    double scaleX = canvas.getWidth() / WIDTH;
+                    double scaleY = canvas.getHeight() / HEIGHT;
+                    gc.save();
                     gc.clearRect(0, 0, canvasWidth, canvasHeight);
                     gc.scale(scaleX, scaleY);
+
                     mediator.clearEnvironment();
                     /* Branching the Game Loop */
                     /* If the agent died in the last loop */
@@ -162,30 +201,43 @@ public class Engine extends Application {
                             /* Rendering the Pause Screen */
                             mediator.drawPauseScreen();
                         } else {
-                            /* ChonBota Only Moves if the Player Press Something */
+                            /* Forces up or down movement if space is pressed or no fish caught. */
+                            if (isSlowMovingUp || isSlowMoving) {
+                                int posY = environment.getProtagonist().getPosY();
+
+                                if (isSlowMoving) {
+                                    int delta = 10;
+                                    if (posY + delta >= 0) {
+                                        environment.getProtagonist().setPosY(0);
+                                        isSlowMoving = false;
+                                        environment.getProtagonist().setSpeed(8);
+                                        startFishingWait();
+                                    } else {
+                                        environment.getProtagonist().setPosY(posY + delta);
+                                    }
+                                }
+
+                                if (isSlowMovingUp) {
+                                    int delta = -10;
+                                    if (posY + delta <= -138) {
+                                        environment.getProtagonist().setPosY(-138);
+                                        isSlowMovingUp = false;
+                                        environment.getProtagonist().setSpeed(8);
+                                    } else {
+                                        environment.getProtagonist().setPosY(posY + delta);
+                                    }
+                                }
+                            }
                             /* Update the protagonist's movements if input exists */
                             if (!input.isEmpty()) {
-                                /* ChonBota Shoots Somebody Who Outdrew You */
+                                /* Fishing Rod goes to the sea */
                                 if (input.contains("SPACE")) {
                                     input.remove("SPACE");
-                                    String direction;
-                                    if (chonBota.isFlipped())
-                                        direction = "LEFT";
-                                    else
-                                        direction = "RIGHT";
-                                    environment.getShots().add(chonBota.getWeapon().fire(chonBota.getPosX(),
-                                            chonBota.getPosY(),
-                                            direction));
+                                    if (!isSlowMoving && !isSlowMovingUp) isSlowMoving = true;
                                 }
-                                /* ChonBota's Movements */
-                                environment.getProtagonist().move(input);
+                                /* Fishing Rod's Movements (LEFT AND RIGHT ONLY) */
+                                if (!isSlowMoving && !isWaitingForFish) environment.getProtagonist().move(input);
                                 environment.checkBorders();
-                            }
-                            /* ChonBot's Automatic Movements */
-                            /* Update the other agents' movements */
-                            for (Agent agent : environment.getAgents()) {
-                                agent.chase(environment.getProtagonist().getPosX(),
-                                        environment.getProtagonist().getPosY());
                             }
                             /* Render the game environment and agents */
                             environment.detectCollision();
@@ -193,6 +245,7 @@ public class Engine extends Application {
                             environment.updateMessages();
                             mediator.drawBackground();
                             mediator.drawAgents();
+                            mediator.drawSea();
                             mediator.drawShots();
                             mediator.drawMessages();
                         }
@@ -207,5 +260,44 @@ public class Engine extends Application {
         Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void adjustCanvasSize(Canvas canvas, double maxWidth, double maxHeight) {
+        double aspectRatio = (double) WIDTH / HEIGHT;
+
+        double newWidth = maxWidth;
+        double newHeight = maxWidth / aspectRatio;
+
+        if (newHeight > maxHeight) {
+            newHeight = maxHeight;
+            newWidth = newHeight * aspectRatio;
+        }
+
+        canvas.setWidth(newWidth);
+        canvas.setHeight(newHeight);
+    }
+
+    private void startFishingWait() {
+        isWaitingForFish = true;
+        
+        int waitMillis = 2000 + (int)(Math.random() * 2000); // 2000–4000ms
+        PauseTransition wait = new PauseTransition(Duration.millis(waitMillis));
+
+        wait.setOnFinished(event -> {
+            isWaitingForFish = false;
+
+            // 🎣 Determine fishing outcome
+            boolean caughtFish = Math.random() < 0.5; // 50% chance
+
+            if (caughtFish) {
+                System.out.println("You caught a fish!");
+                // You can trigger animation, sound, or add to inventory here
+            } else {
+                isSlowMovingUp = true;
+                System.out.println("No fish this time.");
+            }
+        });
+
+        wait.play();
     }
 }

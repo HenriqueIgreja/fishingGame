@@ -41,6 +41,12 @@ public class Environment {
     /** The background image of the game over. */
     private Image gameOverImage;
 
+    /** The background image of the sea. */
+    private Image seaImage;
+
+    /** The image of the key to catch. */
+    private Image catchKeyImage;
+
     /** The protagonist instance. */
     private Agent protagonist;
 
@@ -312,8 +318,8 @@ public class Environment {
             this.protagonist.setPosX(0);
         } else if ((this.protagonist.getPosX() + this.protagonist.getWidth()) > this.width) {
             this.protagonist.setPosX(this.width - protagonist.getWidth());
-        } else if (this.protagonist.getPosY() < 0) {
-            this.protagonist.setPosY(0);
+        //} else if (this.protagonist.getPosY() < 0) {
+        //    this.protagonist.setPosY(0);
         } else if ((this.protagonist.getPosY() + this.protagonist.getHeight()) > this.height) {
             this.protagonist.setPosY(this.height - this.protagonist.getHeight());
         }
@@ -403,4 +409,19 @@ public class Environment {
         this.scale = scale;
     }
 
+    public Image getSeaImage() {
+        return seaImage;
+    }
+
+    public void setSeaImage(String pathImage) {
+        this.seaImage = new Image(getClass().getResource(pathImage).toExternalForm());
+    }
+
+    public Image getCatchKeyImage() {
+        return catchKeyImage;
+    }
+
+    public void setCatchKeyImage(Image catchKeyImage) {
+        this.catchKeyImage = catchKeyImage;
+    }
 }
